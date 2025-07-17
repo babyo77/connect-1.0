@@ -42,10 +42,6 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [messages, setMessages] = useState<
-    Array<{ sender: string; text: string; self: boolean }>
-  >([]);
-  const dataConnRef = useRef<DataConnection | null>(null);
 
   const { id } = useParams();
 
@@ -119,19 +115,6 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
           setStatus({ type: "calling_peer" });
           const call = p.call(id as string, stream, { metadata: user });
           setIncomingCall(call);
-
-          // --- CHAT: Initiate data connection if joining a peer ---
-          const dataConn = p.connect(id as string, { label: "chat" });
-          dataConnRef.current = dataConn;
-          dataConn.on("open", () => {
-            // Optionally notify connection
-          });
-          dataConn.on("data", (data: any) => {
-            setMessages((msgs) => [
-              ...msgs,
-              { sender: id as string, text: String(data), self: false },
-            ]);
-          });
         } catch (err: any) {
           setStatus({ type: "error", error: err?.message || String(err) });
         }
@@ -159,18 +142,6 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
       if (conn.label === "call_rejected") {
         conn.close();
         setStatus({ type: "error", error: "Call declined..." });
-      } else if (conn.label === "chat") {
-        // Accept incoming chat data connection
-        dataConnRef.current = conn;
-        conn.on("data", (data: any) => {
-          setMessages((msgs) => [
-            ...msgs,
-            { sender: conn.peer, text: String(data), self: false },
-          ]);
-        });
-        conn.on("open", () => {
-          // Optionally notify connection
-        });
       }
     });
 
