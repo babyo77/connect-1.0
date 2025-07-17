@@ -102,9 +102,9 @@ export default function StatusRender() {
               <Avatar className="size-24">
                 <AvatarImage
                   src={`https://api.dicebear.com/7.x/initials/svg?seed=${
-                    incomingCall?.metadata?.id?.split("_")[0]?.[0] || "U"
+                    state?.peerId?.split("_")[0]?.[0] || "U"
                   }`}
-                  alt={incomingCall?.metadata?.id?.split("_")[0]?.[0] || "U"}
+                  alt={state?.peerId?.split("_")[0]?.[0] || "U"}
                 />
                 <AvatarFallback>
                   {state?.peerId?.split("_")[0]?.split("")[0] || "Unknown"}
