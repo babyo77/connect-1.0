@@ -3,7 +3,6 @@ import ShimmerLoader from "./loader";
 import BottomBar from "./bottom-bar";
 import { Button } from "./ui/button";
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useUser } from "@/lib/user-context";
 import BlurFadeIn from "./blur-fade-in";
@@ -11,8 +10,6 @@ import BlurFadeIn from "./blur-fade-in";
 export default function StatusRender() {
   const { status, incomingCall } = usePeer();
   const { state } = useUser();
-
-  const router = useRouter();
 
   if (status.type === "permission") {
     return (
@@ -64,7 +61,7 @@ export default function StatusRender() {
             Call again?
           </Button>
           <Button
-            onClick={() => router.push("/")}
+            onClick={() => (window.location.href = "/")}
             size={"sm"}
             variant={"destructive"}
           >

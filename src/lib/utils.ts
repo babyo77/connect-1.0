@@ -6,5 +6,5 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function make_connect_uuid(name: string) {
-  return `${name}_${uuidv4()}`;
+  return `${name.replace(/\s+/g, "")}_${uuidv4()}`;
 }
