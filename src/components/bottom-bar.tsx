@@ -12,7 +12,7 @@ interface ControllerState {
 
 export default function BottomBar() {
   const [controller, setController] = useState<Partial<ControllerState>>({
-    muted: false,
+    muted: true,
   });
   const { incomingCall, localStream } = usePeer();
 
@@ -29,6 +29,9 @@ export default function BottomBar() {
       return { ...prev, muted: newMuted };
     });
   };
+  useEffect(() => {
+    handleToggleMute();
+  }, []);
 
   // Add keyboard shortcut: Cmd+M to toggle mute
   useEffect(() => {

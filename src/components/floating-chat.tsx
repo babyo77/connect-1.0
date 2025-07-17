@@ -48,57 +48,6 @@ export default function FloatingChat() {
   const addMessage = (msg: { sender: string; text: string; self: boolean }) =>
     setMessages((msgs) => [...msgs, msg]);
 
-  // Setup incoming DataConnection listener (receiver side)
-  useEffect(() => {
-    if (!peer.current) return;
-    const handleConnection = (conn: DataConnection) => {
-      if (conn.label !== "chat") return;
-      dataConnRef.current = conn;
-      setConnected(true);
-      setError(null);
-      conn.on("data", (data) => {
-        addMessage({ sender: conn.peer, text: String(data), self: false });
-      });
-      conn.on("open", () => setConnected(true));
-      conn.on("close", () => setConnected(false));
-      conn.on("error", (err) => {
-        setConnected(false);
-        setError(
-          typeof err === "string" ? err : err?.message || "Connection error"
-        );
-      });
-    };
-    peer.current.on("connection", handleConnection);
-    return () => {
-      peer.current?.off("connection", handleConnection);
-    };
-  }, [peer]);
-
-  // Setup outgoing DataConnection (initiator side)
-  useEffect(() => {
-    // Only connect if we have a peer to connect to and no connection yet
-    if (!peer.current || !incomingCall?.peer || dataConnRef.current) return;
-    // Initiate connection with label 'chat'
-    const conn = peer.current.connect(incomingCall.peer, { label: "chat" });
-    dataConnRef.current = conn;
-    conn.on("data", (data) => {
-      addMessage({ sender: conn.peer, text: String(data), self: false });
-    });
-    conn.on("open", () => setConnected(true));
-    conn.on("close", () => setConnected(false));
-    conn.on("error", (err) => {
-      setConnected(false);
-      setError(
-        typeof err === "string" ? err : err?.message || "Connection error"
-      );
-    });
-    // Clean up on unmount
-    return () => {
-      conn.close();
-      if (dataConnRef.current === conn) dataConnRef.current = null;
-    };
-  }, [peer, incomingCall]);
-
   const [unread, setUnread] = useState(false);
   const prevMessagesLength = useRef(messages.length);
 
