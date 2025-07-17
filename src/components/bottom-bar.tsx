@@ -15,6 +15,20 @@ export default function BottomBar() {
   });
   const { incomingCall, localStream } = usePeer();
 
+  // Helper to toggle mute state and update audio track enabled state
+  const handleToggleMute = () => {
+    setController((prev) => {
+      const newMuted = !prev.muted;
+      // Actually mute/unmute the local audio track
+      if (localStream) {
+        localStream.getAudioTracks().forEach((track) => {
+          track.enabled = !newMuted;
+        });
+      }
+      return { ...prev, muted: newMuted };
+    });
+  };
+
   const handleEndCall = () => {
     if (incomingCall) {
       incomingCall.close();
@@ -41,9 +55,7 @@ export default function BottomBar() {
               variant="ghost"
               size="icon"
               aria-label={controller.muted ? "Unmute" : "Mute"}
-              onClick={() =>
-                setController((prev) => ({ ...prev, muted: !prev.muted }))
-              }
+              onClick={handleToggleMute}
               className={
                 controller.muted ? "bg-red-500/80 text-white" : undefined
               }
