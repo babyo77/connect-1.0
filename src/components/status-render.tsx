@@ -80,7 +80,7 @@ export default function StatusRender() {
           {state?.id?.split("_")[0].toUpperCase() || "Unknown"} x{" "}
           {state?.peerId?.split("_")[0].toUpperCase() || "Unknown"}{" "}
         </p>
-        <div className="grid grid-cols-2 w-full h-full gap-4 flex-1">
+        <div className="grid md:grid-cols-2 grid-cols-1 w-full h-full gap-4 flex-1">
           <div className="p-4 relative border col-span-1 rounded-xl backdrop-blur-md bg-gradient-to-br from-white/5 to-zinc-100/10 flex items-center justify-center">
             <div className="backdrop-blur-md border-4 border-zinc/30 rounded-full flex items-center justify-center">
               <Avatar className="size-24">
