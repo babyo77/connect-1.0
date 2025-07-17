@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { make_connect_uuid } from "@/lib/utils";
 import { usePeer } from "@/lib/peer-context";
 import StatusRender from "@/components/status-render";
+import localforage from "localforage";
 
 export default function Page() {
   const { status } = usePeer();
@@ -36,8 +37,13 @@ function App() {
     e.preventDefault();
     const formdata = new FormData(e.currentTarget);
     const name = formdata.get("name");
-    if (!name || typeof name !== "string" || name.trim() === "") {
-      setError("Please enter your name");
+    if (
+      !name ||
+      typeof name !== "string" ||
+      name.trim() === "" ||
+      name.length > 20
+    ) {
+      setError("Please enter your name max 20 char");
       return;
     }
     dispatch({
@@ -79,7 +85,22 @@ function App() {
           )}
         </BlurFadeIn>
       ) : (
-        <Connect />
+        <>
+          <BlurFadeIn className=" absolute top-3 right-3">
+            <Button
+              key={"reset"}
+              variant={"link"}
+              className="text-red-400"
+              onClick={() => {
+                localforage.removeItem("user");
+                window.location.reload();
+              }}
+            >
+              Reset
+            </Button>
+          </BlurFadeIn>
+          <Connect />
+        </>
       )}
     </AnimatePresence>
   );
