@@ -9,7 +9,7 @@ import { DataConnection } from "peerjs";
 
 // Minimal styles for the chat window
 const chatWindowStyle =
-  "fixed z-50 bottom-6 right-6 w-80 max-w-[90vw] bg-white dark:bg-zinc-900 rounded-xl shadow-xl flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-800";
+  "fixed z-50 top-5 right-4 w-80 max-w-[90vw] bg-white dark:bg-zinc-900 rounded-xl shadow-xl flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-800";
 const chatHeaderStyle =
   "flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900";
 const chatBodyStyle =
@@ -21,7 +21,7 @@ export default function FloatingChat() {
   const [open, setOpen] = useState(false);
   const dragConstraintsRef = useRef(null);
   const [input, setInput] = useState("");
-  const { peer, status, incomingCall } = usePeer();
+  const { peer, status, chatConn } = usePeer(); // get chatConn from context
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 480, height: 520 }); // larger default
   const minSize = { width: 320, height: 320 };
@@ -41,12 +41,32 @@ export default function FloatingChat() {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Store the DataConnection
-  const dataConnRef = useRef<DataConnection | null>(null);
-
   // Helper to add message
   const addMessage = (msg: { sender: string; text: string; self: boolean }) =>
     setMessages((msgs) => [...msgs, msg]);
+
+  // Listen for incoming messages and connection events
+  useEffect(() => {
+    if (!chatConn?.current) return;
+    const conn = chatConn.current;
+    const handleData = (data: any) => {
+      addMessage({ sender: conn.peer, text: String(data), self: false });
+    };
+    const handleOpen = () => setConnected(true);
+    const handleClose = () => setConnected(false);
+    const handleError = (err: any) => setError(err?.message || String(err));
+    conn.on("data", handleData);
+    conn.on("open", handleOpen);
+    conn.on("close", handleClose);
+    conn.on("error", handleError);
+    if (conn.open) setConnected(true);
+    return () => {
+      conn.off("data", handleData);
+      conn.off("open", handleOpen);
+      conn.off("close", handleClose);
+      conn.off("error", handleError);
+    };
+  }, [chatConn?.current]);
 
   const [unread, setUnread] = useState(false);
   const prevMessagesLength = useRef(messages.length);
@@ -70,6 +90,19 @@ export default function FloatingChat() {
 
   useEffect(() => {
     if (!open) setError(null);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   const onResizeStart = (dir: string, e: React.MouseEvent) => {
@@ -117,10 +150,11 @@ export default function FloatingChat() {
     window.removeEventListener("mouseup", onResizeEnd);
   };
 
+  // Send message
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && dataConnRef.current && dataConnRef.current.open) {
-      dataConnRef.current.send(input.trim());
+    if (input.trim() && chatConn?.current && chatConn.current.open) {
+      chatConn.current.send(input.trim());
       addMessage({
         sender: peer.current?.id || "me",
         text: input.trim(),
@@ -151,6 +185,8 @@ export default function FloatingChat() {
     />
   );
 
+  if (!chatConn.current) return;
+
   return (
     <>
       {/* Floating Chat Icon with Tooltip */}
@@ -164,7 +200,7 @@ export default function FloatingChat() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
                 transition={{ type: "tween" }}
-                className="fixed z-50 bottom-6 right-6"
+                className="fixed z-50 top-3 right-4"
               >
                 <Button
                   variant="ghost"
@@ -216,7 +252,7 @@ export default function FloatingChat() {
             dragConstraints={dragConstraintsRef}
             style={{
               touchAction: "none",
-              transformOrigin: "bottom right",
+              transformOrigin: "top right",
               width: size.width,
               height: size.height,
               minWidth: minSize.width,
@@ -311,7 +347,7 @@ export default function FloatingChat() {
               </span>
               <button
                 onClick={() => setOpen(false)}
-                className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                className="text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
                 aria-label="Close chat"
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

@@ -24,6 +24,7 @@ interface PeerContextType {
   acceptCall: () => void;
   rejectCall: () => void;
   localStream: MediaStream | null;
+  chatConn: React.MutableRefObject<DataConnection | null>; // NEW: chat DataConnection
 }
 
 const PeerContext = React.createContext<PeerContextType | undefined>(undefined);
@@ -33,6 +34,7 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { state, dispatch } = useUser();
   const peerRef = useRef<Peer | null>(null);
+  const chatConn = useRef<DataConnection | null>(null); // chat DataConnection
 
   const [status, setStatus] = useState<Partial<PeerContextType["status"]>>({
     type: "idle",
@@ -66,6 +68,14 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
         setLocalStream(stream);
       }
       incomingCall.answer(stream);
+      // After answering, establish chat connection if not already
+      if (!chatConn.current) {
+        const remotePeerId = incomingCall.peer;
+        if (peerRef.current && remotePeerId) {
+          const conn = peerRef.current.connect(remotePeerId, { label: "chat" });
+          chatConn.current = conn;
+        }
+      }
     } catch (err: any) {
       setStatus({ type: "error", error: err?.message || String(err) });
     }
@@ -142,6 +152,10 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
       if (conn.label === "call_rejected") {
         conn.close();
         setStatus({ type: "error", error: "Call declined..." });
+        return;
+      }
+      if (conn.label === "chat") {
+        chatConn.current = conn;
       }
     });
 
@@ -175,6 +189,21 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [incomingCall, id, localStream, dispatch]);
 
+  // Listen for incoming chat connections only after call is active
+  useEffect(() => {
+    if (!peerRef.current) return;
+    const p = peerRef.current;
+    const handleConnection = (conn: DataConnection) => {
+      if (conn.label === "chat") {
+        chatConn.current = conn;
+      }
+    };
+    p.on("connection", handleConnection);
+    return () => {
+      p.off("connection", handleConnection);
+    };
+  }, [peerRef.current]);
+
   return (
     <PeerContext.Provider
       value={{
@@ -184,6 +213,7 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
         acceptCall,
         rejectCall,
         localStream,
+        chatConn, // NEW: chat DataConnection
       }}
     >
       {children}
