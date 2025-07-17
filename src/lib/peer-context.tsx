@@ -148,7 +148,7 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
       setStatus({ type: "idle" });
       peerRef.current = null;
     };
-  }, [state?.id, id, dispatch, incomingCall]);
+  }, [state?.id, id, dispatch]);
 
   useEffect(() => {
     incomingCall?.on("stream", (MediaStream) => {
