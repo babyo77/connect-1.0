@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useUser } from "@/lib/user-context";
+import BlurFadeIn from "./blur-fade-in";
 
 export default function StatusRender() {
   const { status, incomingCall } = usePeer();
@@ -76,7 +77,7 @@ export default function StatusRender() {
 
   if (status.type === "peer_connected") {
     return (
-      <div className="min-h-screen flex flex-col text-center p-5 pb-20 gap-3">
+      <BlurFadeIn className="min-h-screen flex flex-col text-center p-5 pb-20 gap-3">
         <p>
           {" "}
           {state?.id?.split("_")[0].toUpperCase() || "Unknown"} x{" "}
@@ -120,7 +121,7 @@ export default function StatusRender() {
           </div>
         </div>
         <BottomBar />
-      </div>
+      </BlurFadeIn>
     );
   }
   return (
