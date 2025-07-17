@@ -5,6 +5,7 @@ import { use, useEffect } from "react";
 import { useUser } from "@/lib/user-context";
 import { useRouter } from "next/navigation";
 import StatusRender from "@/components/status-render";
+import FloatingChat from "@/components/floating-chat";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -20,5 +21,10 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     }
   }, [state?.checking, state?.id, dispatch, id, router]);
 
-  return <StatusRender />;
+  return (
+    <>
+      <StatusRender />
+      <FloatingChat />
+    </>
+  );
 }

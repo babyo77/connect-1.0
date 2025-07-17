@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState, useContext } from "react";
-import Peer, { MediaConnection } from "peerjs";
+import Peer, { DataConnection, MediaConnection } from "peerjs";
 import { User, useUser } from "./user-context";
 import localforage from "localforage";
 import { useParams } from "next/navigation";
@@ -23,7 +23,7 @@ interface PeerContextType {
   incomingCall: MediaConnection | null;
   acceptCall: () => void;
   rejectCall: () => void;
-  localStream: MediaStream | null; // <-- add this
+  localStream: MediaStream | null;
 }
 
 const PeerContext = React.createContext<PeerContextType | undefined>(undefined);
@@ -41,10 +41,23 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [incomingCall, setIncomingCall] = useState<MediaConnection | null>(
     null
   );
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null); // <-- add this
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [messages, setMessages] = useState<
+    Array<{ sender: string; text: string; self: boolean }>
+  >([]);
+  const dataConnRef = useRef<DataConnection | null>(null);
 
   const { id } = useParams();
 
+  const getAudioPermission = async () => {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: {
+        noiseSuppression: true,
+        echoCancellation: true,
+        autoGainControl: true,
+      },
+    });
+  };
   const acceptCall = async () => {
     if (!incomingCall) return;
 
@@ -52,9 +65,8 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
       setStatus({ type: "permission" });
       let stream = localStream;
       if (!stream) {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
+        stream = await getAudioPermission();
+
         setLocalStream(stream);
       }
       incomingCall.answer(stream);
@@ -98,9 +110,7 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
         try {
           setStatus({ type: "permission" });
 
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
+          const stream = await getAudioPermission();
           setLocalStream(stream);
 
           if (!stream) {
@@ -109,6 +119,19 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
           setStatus({ type: "calling_peer" });
           const call = p.call(id as string, stream, { metadata: user });
           setIncomingCall(call);
+
+          // --- CHAT: Initiate data connection if joining a peer ---
+          const dataConn = p.connect(id as string, { label: "chat" });
+          dataConnRef.current = dataConn;
+          dataConn.on("open", () => {
+            // Optionally notify connection
+          });
+          dataConn.on("data", (data: any) => {
+            setMessages((msgs) => [
+              ...msgs,
+              { sender: id as string, text: String(data), self: false },
+            ]);
+          });
         } catch (err: any) {
           setStatus({ type: "error", error: err?.message || String(err) });
         }
@@ -136,6 +159,18 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
       if (conn.label === "call_rejected") {
         conn.close();
         setStatus({ type: "error", error: "Call declined..." });
+      } else if (conn.label === "chat") {
+        // Accept incoming chat data connection
+        dataConnRef.current = conn;
+        conn.on("data", (data: any) => {
+          setMessages((msgs) => [
+            ...msgs,
+            { sender: conn.peer, text: String(data), self: false },
+          ]);
+        });
+        conn.on("open", () => {
+          // Optionally notify connection
+        });
       }
     });
 
@@ -168,6 +203,7 @@ export const PeerProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     });
   }, [incomingCall, id, localStream, dispatch]);
+
   return (
     <PeerContext.Provider
       value={{

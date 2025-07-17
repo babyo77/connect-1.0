@@ -4,6 +4,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 import { Mic, MicOff, PhoneOff } from "lucide-react";
 import { motion } from "motion/react";
 import { usePeer } from "@/lib/use-peer";
+import FloatingChat from "./floating-chat";
 
 interface ControllerState {
   muted: boolean;
@@ -28,6 +29,21 @@ export default function BottomBar() {
       return { ...prev, muted: newMuted };
     });
   };
+
+  // Add keyboard shortcut: Cmd+M to toggle mute
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+M (on Mac)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        handleToggleMute();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [localStream]);
 
   const handleEndCall = () => {
     if (incomingCall) {

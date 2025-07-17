@@ -29,6 +29,7 @@ export default function RootLayout({
         <UserProvider>
           <PeerProvider>
             {children}
+
             <IncomingCall />
           </PeerProvider>
         </UserProvider>
