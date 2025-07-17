@@ -4,6 +4,7 @@ import "./globals.css";
 import { UserProvider } from "@/lib/user-context";
 import { PeerProvider } from "@/lib/peer-context";
 import IncomingCall from "@/components/incoming-call";
+import FloatingChat from "@/components/floating-chat";
 
 const prociono = Prociono({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
             {children}
 
             <IncomingCall />
+            <FloatingChat />
           </PeerProvider>
         </UserProvider>
       </body>

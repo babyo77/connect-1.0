@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { MessageCircle } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 import { Button } from "./ui/button";
@@ -185,6 +185,8 @@ export default function FloatingChat() {
     />
   );
 
+  const dragControls = useDragControls();
+
   if (!chatConn.current) return;
 
   return (
@@ -200,7 +202,7 @@ export default function FloatingChat() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
                 transition={{ type: "tween" }}
-                className="fixed z-50 top-3 right-4"
+                className="fixed z-50 top-3 right-5"
               >
                 <Button
                   variant="ghost"
@@ -242,11 +244,13 @@ export default function FloatingChat() {
           <motion.div
             key="chat-window"
             className={chatWindowStyle}
-            initial={{ scale: 0, opacity: 0 }}
+            initial={{ scale: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
+            exit={{ scale: 0 }}
             transition={{ type: "tween" }}
             drag
+            dragControls={dragControls}
+            dragListener={false}
             dragMomentum={false}
             dragElastic={0.18}
             dragConstraints={dragConstraintsRef}
@@ -313,7 +317,11 @@ export default function FloatingChat() {
               height: 11,
             })}
 
-            <div className={chatHeaderStyle} style={{ cursor: "move" }}>
+            <div
+              className={chatHeaderStyle}
+              style={{ cursor: "move" }}
+              onPointerDown={(e) => dragControls.start(e)}
+            >
               <span className="font-semibold text-zinc-800 dark:text-zinc-100 text-base flex items-center gap-2">
                 Chat
                 {/* Connected indicator */}

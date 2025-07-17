@@ -21,10 +21,5 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     }
   }, [state?.checking, state?.id, dispatch, id, router]);
 
-  return (
-    <>
-      <StatusRender />
-      <FloatingChat />
-    </>
-  );
+  return <StatusRender />;
 }
