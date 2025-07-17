@@ -8,7 +8,7 @@ import { useUser } from "@/lib/user-context";
 import BlurFadeIn from "./blur-fade-in";
 
 export default function StatusRender() {
-  const { status, incomingCall } = usePeer();
+  const { status } = usePeer();
   const { state } = useUser();
 
   if (status.type === "permission") {

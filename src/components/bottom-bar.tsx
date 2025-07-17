@@ -11,7 +11,7 @@ interface ControllerState {
 
 export default function BottomBar() {
   const [controller, setController] = useState<Partial<ControllerState>>({
-    muted: true,
+    muted: false,
   });
   const { incomingCall, localStream } = usePeer();
 
