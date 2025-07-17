@@ -42,7 +42,7 @@ export default function BottomBar() {
 
   return (
     <>
-      <Player muted={controller.muted} hidden autoPlay />
+      <Player hidden autoPlay />
       <motion.div
         initial={{ y: 0, opacity: 1 }}
         animate={{ y: 0, opacity: 1 }}
