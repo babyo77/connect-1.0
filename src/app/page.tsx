@@ -20,7 +20,7 @@ export default function Page() {
 
   return (
     <Suspense>
-      <main className="min-h-screen flex items-center justify-center">
+      <main className="min-h-screen flex items-center p-5 justify-center">
         <App />
       </main>
     </Suspense>
